@@ -10,7 +10,18 @@ Window {
     visible: true
     title: qsTr("Velopack Qt c++ example")
 
-    property string currentVersion: AutoUpdater.currentVersion || "1.0.0"
+    Connections {
+        target: AutoUpdater
+        // User checked for updates, but there were none, show text about it
+        function onNoNewUpdatesAvailable() {
+            noNewUpdatesTxt.visible = true
+        }
+
+        // There's a new version, hide the text about no new version available
+        function onNewVersionChanged() {
+            noNewUpdatesTxt.visible = false
+        }
+    }
 
     Column {
         anchors.fill: parent
@@ -20,8 +31,32 @@ Window {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             font.bold: true
-            text: "Welcome to v%1 of the Velopack Qt C++ Sample App.".arg(
-                      currentVersion)
+            text: "Welcome to Velopack Qt C++ Sample App."
+        }
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            font.bold: true
+            text: "Current version: %1 ".arg(AutoUpdater.currentVersion)
+        }
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            font.bold: true
+            font.pixelSize: 18
+            color: "red"
+            text: "New update available! v%1 ".arg(AutoUpdater.newVersion)
+            visible: AutoUpdater.newVersion !== ""
+        }
+
+        Text {
+            id: noNewUpdatesTxt
+            anchors.horizontalCenter: parent.horizontalCenter
+            font.bold: true
+            font.pixelSize: 18
+            color: "crimson"
+            text: "No new updates right now..."
+            visible: false
         }
 
         Button {
@@ -29,6 +64,9 @@ Window {
             height: 100
             anchors.horizontalCenter: parent.horizontalCenter
             text: "Check for updates"
+            onClicked: {
+                AutoUpdater.checkForUpdates()
+            }
         }
 
         Button {
@@ -36,6 +74,11 @@ Window {
             height: 100
             anchors.horizontalCenter: parent.horizontalCenter
             text: "Download update"
+            enabled: AutoUpdater.newVersion !== ""
+                     && !AutoUpdater.updateReadyToInstall
+            onClicked: {
+                AutoUpdater.downloadLatestUpdate()
+            }
         }
 
         Button {
@@ -43,6 +86,10 @@ Window {
             height: 100
             anchors.horizontalCenter: parent.horizontalCenter
             text: "Apply update and restart"
+            enabled: AutoUpdater.updateReadyToInstall
+            onClicked: {
+                AutoUpdater.applyUpdateAndRestart()
+            }
         }
     }
 }

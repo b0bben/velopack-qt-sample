@@ -3,54 +3,69 @@
 #include <QString>
 #include <QtDebug>
 
-AutoUpdater::AutoUpdater(QObject *parent) : QObject(parent), worker(manager) {
-
-  connect(&worker, &UpdateWorker::updateDownloaded, this, [=]() {
-    // We have downloaded a new update, notify UI
-    qDebug() << __FUNCTION__ << "We have downloaded a new update, notify UI";
-    setNewVersion(QString::fromStdString(updInfo->targetFullRelease->version));
-    setUpdateReadyToInstall(true);
-  });
-
-  worker.moveToThread(&workerThread);
-  connect(&workerThread, &QThread::finished, &worker, &QObject::deleteLater);
-  workerThread.start();
-
-  // Do a check on startup
-  checkForUpdates();
-}
-
-AutoUpdater::~AutoUpdater() {
-  workerThread.quit();
-  workerThread.wait(200);
-};
-
-void AutoUpdater::checkForUpdates() {
+AutoUpdater::AutoUpdater(QObject *parent) : QObject(parent) {
 
   try {
     // Init Velopack auto-updater
     manager.setUrlOrPath(kUpdateUrl);
 
-    qInfo() << "Current version: " << manager.getCurrentVersion();
+    QString currentVersion =
+        QString::fromStdString(manager.getCurrentVersion());
 
-    // Initial check for updates on startup
+    qInfo() << "Current version: " << currentVersion;
+    setCurrentVersion(currentVersion);
+  } catch (const std::exception &err) {
+    qInfo() << "Error initating auto-updater, msg: " << err.what();
+  }
+  // Do a check on startup, if desired
+  // checkForUpdates();
+}
+
+AutoUpdater::~AutoUpdater(){};
+
+void AutoUpdater::checkForUpdates() {
+
+  try {
+    // Check for updates
     updInfo = manager.checkForUpdates();
 
     if (updInfo == nullptr) {
       // no updates available
       qInfo() << "No updates available, running latest version \\o/";
+      Q_EMIT noNewUpdatesAvailable();
     } else {
       setNewVersion(
           QString::fromStdString(updInfo->targetFullRelease->version));
-      qInfo() << "Update available: " << newVersion()
-              << ", starting download in background...";
-
-      // Call the worker method which lives in another thread
-      QMetaObject::invokeMethod(&worker, "downloadUpdate",
-                                Qt::QueuedConnection);
+      qInfo() << "Update available: " << newVersion();
     }
   } catch (const std::exception &err) {
-    qInfo() << "Error initating auto-updater, msg: " << err.what();
+    qInfo() << "Error checking for new updates, msg: " << err.what();
+    Q_EMIT noNewUpdatesAvailable();
+  }
+}
+
+void AutoUpdater::downloadLatestUpdate() {
+  try {
+    if (updInfo != nullptr) {
+      qInfo() << __FUNCTION__ << "Downloading new version: "
+              << QString::fromStdString(updInfo->targetFullRelease->version);
+      manager.downloadUpdates(updInfo->targetFullRelease.get());
+
+      qInfo() << __FUNCTION__ << "Downloaded version: "
+              << QString::fromStdString(updInfo->targetFullRelease->version);
+
+      setUpdateReadyToInstall(true);
+      Q_EMIT updateDownloaded();
+    } else {
+      qInfo() << __FUNCTION__
+              << "Trying to update, even though we don't have a new version! "
+                 "This shouldn't happen...";
+      setUpdateReadyToInstall(false);
+    }
+  } catch (const std::exception &err) {
+    qWarning() << __FUNCTION__ << "Updating failed with error: " << err.what();
+    setUpdateReadyToInstall(false);
+    Q_EMIT updateDownloadFailed();
   }
 }
 
