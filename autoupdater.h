@@ -6,7 +6,7 @@
 #include <QObject>
 #include <QThread>
 
-constexpr auto kUpdateUrl = "/Users/bob/dev/temp/velopack/releases";
+constexpr auto kUpdateUrl = "/Users/bob/dev/temp/VelopackQtSample/releases";
 
 class AutoUpdater : public QObject {
   Q_OBJECT

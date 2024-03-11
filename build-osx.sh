@@ -28,22 +28,33 @@ if [ -d "$BUILD_DIR" ]; then
     rm -rf "$BUILD_DIR"
 fi
 
+# Remove publish directory if it exists
+if [ -d "$PUBLISH_DIR" ]; then
+    rm -rf "$PUBLISH_DIR"
+fi
+
 # Create build directory to run cmake in
 mkdir "$BUILD_DIR"
 
 # Navigate to the build directory
 cd "$BUILD_DIR" || exit
 
-cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PUBLISH_DIR -DCMAKE_PREFIX_PATH=$QT_DIR ..
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PUBLISH_DIR -DCMAKE_PREFIX_PATH=$QT_DIR ..
 
-if [ $? -ne 0 ] ; then
-  echo "I couldn't run cmake. Exiting." 
-  cd $SCRIPT_DIR
-  exit 1
+# Check if cmake was successful
+if [ $? -eq 0 ]; then
+    # Run cmake build
+    cmake --build .
+
+    # Run cmake install and mute the output
+    echo ""
+    echo "Packaging Qt app..."
+    cmake --build . --target install > /dev/null 2>&1
+else
+    echo "CMake configuration failed."
+    cd $SCRIPT_DIR
+    exit 1
 fi
-
-ninja
-ninja install
 
 echo ""
 echo "Building Velopack Qt Sample Release v$BUILD_VERSION"
