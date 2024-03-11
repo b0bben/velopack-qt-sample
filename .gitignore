@@ -1,4 +1,7 @@
 # Cmake
+build/
+releases/
+publish/
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
