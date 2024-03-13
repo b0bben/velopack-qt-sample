@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
+import QtQuick.Dialogs
 
 import VelopackQt 1.0
 
@@ -21,6 +22,11 @@ Window {
         function onNewVersionChanged() {
             noNewUpdatesTxt.visible = false
         }
+
+        function onUpdatingFailed(errorMsg) {
+            errDialog.text = errorMsg
+            errDialog.open()
+        }
     }
 
     Column {
@@ -37,7 +43,7 @@ Window {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             font.bold: true
-            text: "Current version: %1 ".arg(AutoUpdater.currentVersion)
+            text: "Current version: %1".arg(AutoUpdater.currentVersion).arg(AutoUpdater.updateUrl())
         }
 
         Text {
@@ -92,4 +98,20 @@ Window {
             }
         }
     }
+
+    Text {
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 8
+        anchors.horizontalCenter: parent.horizontalCenter
+        font.bold: false
+        font.italic: true
+        font.pixelSize: 12
+        text: "Updates URL: %1".arg(AutoUpdater.updateUrl())
+    }
+
+    MessageDialog {
+        id: errDialog
+        buttons: MessageDialog.Ok
+    }
+
 }

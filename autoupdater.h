@@ -6,8 +6,6 @@
 #include <QObject>
 #include <QThread>
 
-constexpr auto kUpdateUrl = "/Users/bob/dev/temp/VelopackQtSample/releases";
-
 class AutoUpdater : public QObject {
   Q_OBJECT
 
@@ -46,6 +44,7 @@ public:
   Q_INVOKABLE void applyUpdateAndRestart();
   Q_INVOKABLE void checkForUpdates();
   Q_INVOKABLE void downloadLatestUpdate();
+  Q_INVOKABLE QString updateUrl();
 
 signals:
   void noNewUpdatesAvailable();
@@ -53,7 +52,7 @@ signals:
   void currentUpdateChannelChanged();
   void currentVersionChanged();
   void newVersionChanged();
-  void updatingFailed();
+  void updatingFailed(QString errorMg);
   void updateDownloadFailed();
   void updateDownloaded();
 

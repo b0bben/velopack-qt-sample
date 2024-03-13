@@ -3,6 +3,10 @@
 #include <QString>
 #include <QtDebug>
 
+#include "constants.h"
+
+auto kUpdateUrl = UPDATE_URL;
+
 AutoUpdater::AutoUpdater(QObject *parent) : QObject(parent) {
 
   try {
@@ -69,8 +73,11 @@ void AutoUpdater::downloadLatestUpdate() {
   }
 }
 
+QString AutoUpdater::updateUrl() { return QString::fromStdString(kUpdateUrl); }
+
 void AutoUpdater::applyUpdateAndRestart() {
   if (!updateReadyToInstall()) {
+    Q_EMIT updatingFailed("Update not ready, try restarting the sample app");
     return;
   }
 
@@ -88,7 +95,7 @@ void AutoUpdater::applyUpdateAndRestart() {
     }
   } catch (const std::exception &err) {
     qWarning() << __FUNCTION__ << "Updating failed with error: " << err.what();
-    Q_EMIT updatingFailed();
+    Q_EMIT updatingFailed(QString::fromStdString(err.what()));
   }
 }
 

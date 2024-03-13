@@ -2,14 +2,14 @@
 setlocal
 
 rem Find the absolute path of the script
-for %%i in (%0) do set "SCRIPT_DIR=%~dpi"
+set "SCRIPT_DIR=%~dp0"
 
 rem Check if version and Qt path parameters are provided
 if "%~2"=="" (
     echo Version number and path to Qt installation are required.
     echo Usage: %~nx0 [version] [path-to-qt]
     echo.
-    echo Example: %~nx0 1.0.4 C:\Users\kalle\Qt\6.53\windows
+    echo Example: %~nx0 1.0.4 C:\Users\kalle\Qt\6.5.3\msvc2019_64
     echo.
     exit /b 1
 )
@@ -17,12 +17,14 @@ if "%~2"=="" (
 set BUILD_VERSION=%~1
 set QT_DIR=%~2
 
-set BUILD_DIR=%SCRIPT_DIR%\build
-set RELEASE_DIR=%SCRIPT_DIR%\releases
-set PUBLISH_DIR=%SCRIPT_DIR%\publish
+set BUILD_DIR=%SCRIPT_DIR%build
+set RELEASE_DIR=%SCRIPT_DIR%releases
+set PUBLISH_DIR=%SCRIPT_DIR%publish
 
 echo.
 echo Compiling Velopack Qt sample...
+
+echo #define UPDATE_URL R"(%RELEASE_DIR%)" > constants.h
 
 rem Remove build directory if it exists
 if exist "%BUILD_DIR%" (
@@ -30,6 +32,7 @@ if exist "%BUILD_DIR%" (
 )
 
 rem Create build directory to run cmake in
+echo Creating %BUILD_DIR%...
 mkdir "%BUILD_DIR%"
 
 rem Navigate to the build directory
@@ -48,12 +51,11 @@ ninja install
 
 echo.
 echo Building Velopack Qt Sample Release v%BUILD_VERSION%
-vpk pack --packId appVelopackQtSample ^
-    --mainExe appVelopackQtSample.exe ^
+ vpk pack --packId appVelopackQtSample ^
+    --mainExe bin\appVelopackQtSample.exe ^
     --packTitle VelopackQtSample ^
     -v %BUILD_VERSION% ^
     -o "%RELEASE_DIR%" ^
-    -p "%PUBLISH_DIR%" ^
-    -i "%SCRIPT_DIR%\artwork\DefaultApp_64.png"
+    -p "%PUBLISH_DIR%"
 
 :end

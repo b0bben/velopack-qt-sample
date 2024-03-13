@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.21)
 
 project(VelopackQtSample VERSION 0.1 LANGUAGES CXX)
 
@@ -22,6 +22,7 @@ find_package(Qt6 6.2 REQUIRED COMPONENTS Quick)
 
 qt_add_executable(appVelopackQtSample
     main.cpp
+    constants.h
     Velopack.hpp
     Velopack.cpp
     autoupdater.h
@@ -49,22 +50,6 @@ target_link_libraries(appVelopackQtSample
     PRIVATE Qt6::Quick
 )
 
-if (APPLE)
-    # Copy macOS updater/installer binary that needs to be next to our binary
-    add_custom_command(
-         TARGET appVelopackQtSample POST_BUILD
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-           ${PROJECT_SOURCE_DIR}/platforms/macos/VfusionMac
-           $<TARGET_FILE_DIR:appVelopackQtSample>)
-elseif(WIN32)
-    # Copy Windows updater/installer binary that needs to be next to our binary
-    add_custom_command(
-         TARGET appVelopackQtSample POST_BUILD
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-           ${PROJECT_SOURCE_DIR}/platforms/windows/Vfusion.exe
-           $<TARGET_FILE_DIR:appVelopackQtSample>)
-endif()
-
 include(GNUInstallDirs)
 install(TARGETS appVelopackQtSample
     BUNDLE DESTINATION .
@@ -72,8 +57,17 @@ install(TARGETS appVelopackQtSample
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+if (APPLE)
+    # Copy macOS updater/installer binary that needs to be next to our binary
+    install(FILES ${PROJECT_SOURCE_DIR}/platforms/macos/VfusionMac DESTINATION ${CMAKE_INSTALL_BINDIR})
+elseif(WIN32)
+    # Copy Windows updater/installer binary that needs to be next to our binary
+    install(FILES ${PROJECT_SOURCE_DIR}/platforms/windows/Vfusion.exe DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
 qt_generate_deploy_qml_app_script(
     TARGET appVelopackQtSample
     OUTPUT_SCRIPT deploy_script
 )
+
 install(SCRIPT ${deploy_script})
