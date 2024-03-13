@@ -3,12 +3,6 @@
 
 #include "autoupdater.h"
 
-void noMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
-  Q_UNUSED(type);
-  Q_UNUSED(context);
-  Q_UNUSED(msg);
-}
-
 int main(int argc, char *argv[]) {
 
   try {
@@ -20,10 +14,6 @@ int main(int argc, char *argv[]) {
   }
 
   QGuiApplication app(argc, argv);
-
-  if (!app.arguments().contains(u"--with-debug"_qs)) {
-    qInstallMessageHandler(noMessageOutput);
-  }
 
   // Init Auto Updater as a singleton
   qmlRegisterSingletonInstance("VelopackQt", 1, 0, "AutoUpdater",
